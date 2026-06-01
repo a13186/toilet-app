@@ -89,6 +89,7 @@ class Toilet {
 
   String get typeLabel => switch (type) {
         'public' => '공중화장실',
+        'dev' => '개방화장실',
         'open' => '개방화장실',
         'simple' => '간이화장실',
         'mobile' => '이동화장실',

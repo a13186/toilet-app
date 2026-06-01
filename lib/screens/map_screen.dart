@@ -180,7 +180,7 @@ class _MapScreenState extends State<MapScreen> {
               _selectedType == 'community')
           ? null
           : _selectedType;
-      // 공식 화장실 + 커뮤니티 화장실을 동시에 로드, 둘 다 반경 필터 적용
+      // 공식 화장실 + 커뮤니티 화장실 + OSM 공중화장실을 동시에 로드
       final results = await Future.wait([
         ToiletService.getNearby(
           lat: _center.latitude,
@@ -193,10 +193,34 @@ class _MapScreenState extends State<MapScreen> {
           lng: _center.longitude,
           radiusMeters: _radiusMeters,
         ),
+        CommunityService.getOsmToilets(
+          lat: _center.latitude,
+          lng: _center.longitude,
+          radiusMeters: _radiusMeters,
+        ),
       ]);
       if (mounted) {
+        // OSM 데이터를 공중화장실(Toilet) 객체로 변환해 공식 화장실 목록에 합산
+        // 이름이 없거나 '화장실'인 경우 '공중화장실'로 대체
+        final osmToilets = (results[2] as List<CommunityToilet>)
+            .map((t) {
+              final rawName = t.name.trim();
+              final name = (rawName.isEmpty || rawName == '화장실')
+                  ? '공중화장실'
+                  : rawName;
+              return Toilet(
+                id: t.id,
+                name: name,
+                address: t.address,
+                latitude: t.latitude!,
+                longitude: t.longitude!,
+                type: 'public',
+                isPaid: false,
+              );
+            })
+            .toList();
         setState(() {
-          _toilets = results[0] as List<Toilet>;
+          _toilets = [...(results[0] as List<Toilet>), ...osmToilets];
           _communityToilets = results[1] as List<CommunityToilet>;
           _loading = false;
           _rebuildMarkers();

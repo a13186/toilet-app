@@ -37,9 +37,9 @@ class ToiletListPanel extends StatefulWidget {
 class _ToiletListPanelState extends State<ToiletListPanel> {
   final _dsController = DraggableScrollableController();
 
-  static const _minSize = 0.08;
+  static const _minSize = 0.17;
   static const _maxSize = 0.65;
-  static const _snapPoints = [0.15, 0.42, 0.65];
+  static const _snapPoints = [0.17, 0.42, 0.65];
 
   bool get _isCommunityTab => widget.selectedType == 'community';
 
@@ -90,7 +90,7 @@ class _ToiletListPanelState extends State<ToiletListPanel> {
 
   void _onHeaderTap() {
     if (!_dsController.isAttached) return;
-    final target = _dsController.size <= 0.16 ? 0.42 : 0.15;
+    final target = _dsController.size <= 0.18 ? 0.42 : 0.17;
     _dsController.animateTo(
       target,
       duration: const Duration(milliseconds: 300),
@@ -101,7 +101,7 @@ class _ToiletListPanelState extends State<ToiletListPanel> {
   static const _typeFilters = [
     ('all', '전체'),
     ('public', '공중'),
-    ('dev', '개발'),
+    ('dev', '개방'),
     ('community', '커뮤니티'),
   ];
 
@@ -112,24 +112,26 @@ class _ToiletListPanelState extends State<ToiletListPanel> {
 
     return DraggableScrollableSheet(
       controller: _dsController,
-      initialChildSize: 0.15,
+      initialChildSize: 0.17,
       minChildSize: _minSize,
       maxChildSize: _maxSize,
       snap: true,
       snapSizes: _snapPoints,
-      builder: (_, scrollController) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: const [
-            BoxShadow(
-              blurRadius: 12,
-              color: Colors.black26,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Column(
+      builder: (_, scrollController) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: const [
+              BoxShadow(
+                blurRadius: 12,
+                color: Colors.black26,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
           children: [
             // 헤더
             GestureDetector(
@@ -155,18 +157,23 @@ class _ToiletListPanelState extends State<ToiletListPanel> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        const Text(
-                          '내 주변 화장실',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$_totalCount개',
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: '내주변 화장실(1km 내) : ',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                              TextSpan(
+                                text: '$_totalCount개',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const Spacer(),
@@ -277,6 +284,7 @@ class _ToiletListPanelState extends State<ToiletListPanel> {
           ],
         ),
       ),
+    ),
     );
   }
 

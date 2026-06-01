@@ -254,6 +254,13 @@ class _CommunityToiletTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12),
+            )
+          else if (toilet.latitude != null && toilet.longitude != null)
+            Text(
+              '📍 ${toilet.latitude!.toStringAsFixed(5)}, ${toilet.longitude!.toStringAsFixed(5)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             ),
           if (toilet.avgRating != null)
             Text(

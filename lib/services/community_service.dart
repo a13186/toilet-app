@@ -191,6 +191,7 @@ class CommunityService {
         res = await _db
             .from('community_toilets')
             .select('*, community_reviews(id, rating, password, created_at)')
+            .neq('device_id', 'osm_import_v1')
             .gte('latitude', lat - deltaLat)
             .lte('latitude', lat + deltaLat)
             .gte('longitude', lng - deltaLng)
@@ -201,6 +202,7 @@ class CommunityService {
         res = await _db
             .from('community_toilets')
             .select('*, community_reviews(id, rating, password, created_at)')
+            .neq('device_id', 'osm_import_v1')
             .order('created_at', ascending: false)
             .limit(300);
       }
@@ -287,6 +289,7 @@ class CommunityService {
       final res = await _db
           .from('community_toilets')
           .select('*, community_reviews(id, rating, password, created_at)')
+          .neq('device_id', 'osm_import_v1')
           .ilike('name', '%${query.trim()}%')
           .not('latitude', 'is', null)
           .not('longitude', 'is', null)
@@ -294,6 +297,55 @@ class CommunityService {
       return (res as List)
           .cast<Map<String, dynamic>>()
           .map(CommunityToilet.fromMap)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // OSM 임포트 데이터만 반환 (지도에서 공중화장실로 표시용)
+  static Future<List<CommunityToilet>> getOsmToilets({
+    double? lat,
+    double? lng,
+    double radiusMeters = 1000,
+  }) async {
+    try {
+      List<dynamic> res;
+      if (lat != null && lng != null) {
+        final deltaLat = radiusMeters / 111000;
+        final deltaLng = radiusMeters / (111000 * cos(lat * pi / 180));
+        res = await _db
+            .from('community_toilets')
+            .select('id, name, address, latitude, longitude')
+            .eq('device_id', 'osm_import_v1')
+            .not('latitude', 'is', null)
+            .not('longitude', 'is', null)
+            .gte('latitude', lat - deltaLat)
+            .lte('latitude', lat + deltaLat)
+            .gte('longitude', lng - deltaLng)
+            .lte('longitude', lng + deltaLng)
+            .limit(500);
+      } else {
+        res = await _db
+            .from('community_toilets')
+            .select('id, name, address, latitude, longitude')
+            .eq('device_id', 'osm_import_v1')
+            .not('latitude', 'is', null)
+            .not('longitude', 'is', null)
+            .limit(500);
+      }
+      return res
+          .cast<Map<String, dynamic>>()
+          .map((m) => CommunityToilet(
+                id: m['id'] as String,
+                name: m['name'] as String,
+                address: m['address'] as String?,
+                placeType: 'etc',
+                deviceId: 'osm_import_v1',
+                latitude: (m['latitude'] as num?)?.toDouble(),
+                longitude: (m['longitude'] as num?)?.toDouble(),
+                createdAt: DateTime.now(),
+              ))
           .toList();
     } catch (_) {
       return [];

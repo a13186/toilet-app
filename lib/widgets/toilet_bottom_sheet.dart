@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/toilet.dart';
 import '../services/favorites_service.dart';
 import '../services/history_service.dart';
+import '../services/location_service.dart';
 import '../services/navigation_service.dart';
 import 'rating_sheet.dart';
 import 'review_list_widget.dart';
@@ -49,6 +50,15 @@ class _ToiletBottomSheetState extends State<ToiletBottomSheet> {
     ));
   }
 
+  Future<(double?, double?)> _getOrigin() async {
+    try {
+      final loc = await LocationService.getCurrentPosition()
+          .timeout(const Duration(seconds: 3));
+      if (loc.isOk) return (loc.lat, loc.lng);
+    } catch (_) {}
+    return (null, null);
+  }
+
   void _openNavigation() {
     final t = widget.toilet;
     showModalBottomSheet(
@@ -69,27 +79,32 @@ class _ToiletBottomSheetState extends State<ToiletBottomSheet> {
             ListTile(
               leading: const Text('🗺️', style: TextStyle(fontSize: 22)),
               title: const Text('구글 지도'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                NavigationService.openGoogleMaps(t.latitude, t.longitude);
+                final (lat, lng) = await _getOrigin();
+                NavigationService.openGoogleMaps(t.latitude, t.longitude,
+                    originLat: lat, originLng: lng, name: t.name);
               },
             ),
             ListTile(
               leading: const Text('🟡', style: TextStyle(fontSize: 22)),
               title: const Text('카카오맵'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                NavigationService.openKakaoMap(
-                    t.latitude, t.longitude, t.name);
+                final (lat, lng) = await _getOrigin();
+                NavigationService.openKakaoMap(t.latitude, t.longitude, t.name,
+                    originLat: lat, originLng: lng);
               },
             ),
             ListTile(
               leading: const Text('🟢', style: TextStyle(fontSize: 22)),
               title: const Text('네이버 지도'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
+                final (lat, lng) = await _getOrigin();
                 NavigationService.openNaverMap(
-                    t.latitude, t.longitude, t.name, 'com.example.toilet_app');
+                    t.latitude, t.longitude, t.name, 'com.bsangshop.toilet_app',
+                    originLat: lat, originLng: lng);
               },
             ),
             const SizedBox(height: 8),

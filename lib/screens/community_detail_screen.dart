@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/community_service.dart';
+import '../services/location_service.dart';
 import '../services/navigation_service.dart';
 
 class CommunityDetailScreen extends StatefulWidget {
@@ -74,7 +75,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
   // ── 길 안내 ─────────────────────────────────────────────────────
 
-  void _openNavigation() {
+  Future<(double?, double?)> _getOrigin() async {
+    try {
+      final loc = await LocationService.getCurrentPosition()
+          .timeout(const Duration(seconds: 3));
+      if (loc.isOk) return (loc.lat, loc.lng);
+    } catch (_) {}
+    return (null, null);
+  }
+
+  Future<void> _openNavigation() async {
     final t = _toilet;
     if (t.latitude == null || t.longitude == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,6 +92,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       );
       return;
     }
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       builder: (_) => SafeArea(
@@ -100,26 +111,32 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ListTile(
               leading: const Text('🗺️', style: TextStyle(fontSize: 22)),
               title: const Text('구글 지도'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                NavigationService.openGoogleMaps(t.latitude!, t.longitude!);
+                final (lat, lng) = await _getOrigin();
+                NavigationService.openGoogleMaps(t.latitude!, t.longitude!,
+                    originLat: lat, originLng: lng, name: t.name);
               },
             ),
             ListTile(
               leading: const Text('🟡', style: TextStyle(fontSize: 22)),
               title: const Text('카카오맵'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                NavigationService.openKakaoMap(t.latitude!, t.longitude!, t.name);
+                final (lat, lng) = await _getOrigin();
+                NavigationService.openKakaoMap(t.latitude!, t.longitude!, t.name,
+                    originLat: lat, originLng: lng);
               },
             ),
             ListTile(
               leading: const Text('🟢', style: TextStyle(fontSize: 22)),
               title: const Text('네이버 지도'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
+                final (lat, lng) = await _getOrigin();
                 NavigationService.openNaverMap(
-                    t.latitude!, t.longitude!, t.name, 'com.example.toilet_app');
+                    t.latitude!, t.longitude!, t.name, 'com.bsangshop.toilet_app',
+                    originLat: lat, originLng: lng);
               },
             ),
             const SizedBox(height: 8),

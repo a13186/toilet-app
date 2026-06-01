@@ -14,7 +14,7 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.realweb21.toiletapp"
+    namespace = "com.bsangshop.toilet_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.realweb21.toiletapp"
+        applicationId = "com.bsangshop.toilet_app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
